@@ -1,8 +1,6 @@
 from datetime import datetime
 
-from pydantic import ValidationError
-
-from DataCollection.RequestClass import Request
+from source.DataCollection import Request
 
 if __name__ == "__main__":
     starttime = datetime(2021, 7, 25)
