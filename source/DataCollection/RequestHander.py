@@ -2,5 +2,10 @@ import pandas as pd
 import yfinance as yf
 
 
-def RequestDecoder(ticker, timeframe):
-    ...
+class RequestService(Protocol):
+    @staticmethod
+    def analysisRequest(DTOObject):
+        request = Request(DTOObject)
+        analysisObject = Analysis(request)
+        return analysisObject
+
