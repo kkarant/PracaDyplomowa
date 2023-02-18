@@ -1,9 +1,7 @@
 from datetime import datetime
 
-from source.Classes.RequestClass import Request
-from source.Classes.RequestInterface import RequestService
+from source.Classes.RequestInterface import Request
 
 if __name__ == "__main__":
-    DTOObject = ["MSFT", datetime(2021, 7, 25), datetime(2021, 8, 25), "1H"]
-
-    RequestService.analysisRequest(DTOObject)
+    req = Request("MSFT", datetime(2023, 1, 17), datetime(2023, 2, 17), "1D")
+    analysis = req.analyze_request()
