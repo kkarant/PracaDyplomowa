@@ -1,14 +1,9 @@
 from datetime import datetime
 
-from source.DataCollection import Request
+from source.Classes.RequestClass import Request
+from source.Classes.RequestInterface import RequestService
 
 if __name__ == "__main__":
-    starttime = datetime(2021, 7, 25)
-    endtime = datetime(2021, 8, 25)
-    request = Request(
-        ticker="MSFT",
-        starttime=starttime,
-        endtime=endtime,
-        interval="1H",
-    )
-    print(request)
+    DTOObject = ["MSFT", datetime(2021, 7, 25), datetime(2021, 8, 25), "1H"]
+
+    RequestService.analysisRequest(DTOObject)
