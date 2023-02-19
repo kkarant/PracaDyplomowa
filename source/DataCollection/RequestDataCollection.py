@@ -29,7 +29,7 @@ class DataPrep:
         self.len_test = len(self.data_test)
         self.len_train_windows = None
 
-    def get_test_data(self, seq_len, normalise):
+    def get_pred_window(self, seq_len, normalise):
         data_windows = []
         print(self.len_test)
         print(seq_len)

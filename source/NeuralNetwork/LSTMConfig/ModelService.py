@@ -2,16 +2,17 @@ import json
 import math
 import os
 
+import numpy as np
 from matplotlib import pyplot as plt
 
 from source.DataCollection.RequestDataCollection import DataPrep
 from source.NeuralNetwork.LSTMConfig.Model import Model
 
 
-def plot_results(predicted_data, true_data):
+def plot_results(predicted_data): # , true_data
     fig = plt.figure(facecolor='white')
     ax = fig.add_subplot(111)
-    ax.plot(true_data, label='True Data')
+    # ax.plot(true_data, label='True Data')
     plt.plot(predicted_data, label='Prediction', color='red')
     plt.legend()
     plt.show()
@@ -42,16 +43,7 @@ def getTrainXY(data, configs):
     return x, y
 
 
-def prediction(configs, model, data, x, y):
-    # in-memory training
-    # model.train(
-    #     x,
-    #     y,
-    #     epochs=configs['training']['epochs'],
-    #     batch_size=configs['training']['batch_size'],
-    #     save_dir=configs['model']['save_dir']
-    # )
-
+def prediction(configs, model, data, x, y, RequestObject):
     steps_per_epoch = math.ceil(
         (data.len_train - configs['data']['sequence_length']) / configs['training']['batch_size'])
     model.train_generator(
@@ -65,15 +57,22 @@ def prediction(configs, model, data, x, y):
         steps_per_epoch=steps_per_epoch,
         save_dir=configs['model']['save_dir']
     )
-
-    x_test, y_test = data.get_test_data(
-        seq_len=configs['data']['sequence_length'],
-        normalise=configs['data']['normalise']
-    )
-
-    # predictions = model.predict_sequences_multiple(x_test, configs['data']['sequence_length'],
-    #                                                configs['data']['sequence_length'])
+    X = data.data_train
+    n_steps = RequestObject.getNumberOfSteps()
+    inputs = X[-1].reshape(1, -1)
+    preds = []
+    for i in range(n_steps):
+        pred = model.predict(inputs)[0]
+        preds.append(pred)
+        inputs = np.concatenate([inputs[:, 1:], pred.reshape(1, -1)], axis=1)
+    # x_test, y_test = data.get_pred_window(
+    #     seq_len=RequestObject.starttime,
+    #     normalise=RequestObject.endtime
+    # )
+    #
+    # # predictions = model.predict_sequences_multiple(x_test, configs['data']['sequence_length'],
+    # #                                                configs['data']['sequence_length'])
     # predictions = model.predict_sequence_full(x_test, configs['data']['sequence_length'])
-    predictions = model.predict_point_by_point(x_test)
+    # # predictions = model.predict_point_by_point(x_test)
 
-    plot_results(predictions, y_test)
+    plot_results(preds)
