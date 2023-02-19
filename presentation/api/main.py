@@ -25,3 +25,5 @@ def include_static(app: FastAPI) -> None:
 
 
 print("ABOBA")
+print("ABOBA2"
+      "")
