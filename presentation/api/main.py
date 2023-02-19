@@ -22,3 +22,6 @@ def include_static(app: FastAPI) -> None:
     os.makedirs('./data/', exist_ok=True)
 
     app.mount('/data/', StaticFiles(directory='data'), name='data')
+
+
+print("ABOBA")
