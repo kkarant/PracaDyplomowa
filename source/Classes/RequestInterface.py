@@ -10,7 +10,7 @@ from pydantic import BaseModel, validator
 import matplotlib.pyplot as plt
 
 from source.DataCollection.RequestDataCollection import dataCollector
-from source.NeuralNetwork.LSTMConfig.ModelService import getConfigAndData, modelInit, prediction
+from source.NeuralNetwork.LSTMConfig.ModelService import getConfigAndData, modelInit, prediction, getTrainXY
 
 key = 'JX8SQV1M7PTAB6YB'
 
@@ -92,7 +92,8 @@ def generate_image(RequestObject, pred) -> [str, str]:
 def generate_pred(RequestObject) -> dict[datetime, float] | Exception:
     data = dataCollector(RequestObject)
     configs, dataConfig = getConfigAndData(data)
-    model, x, y = modelInit(configs, dataConfig)
+    model = modelInit(configs)
+    x, y = getTrainXY(dataConfig, configs)
     prediction(configs, model, dataConfig, x, y)
 
     return data

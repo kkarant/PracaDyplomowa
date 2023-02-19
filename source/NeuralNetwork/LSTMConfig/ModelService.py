@@ -28,14 +28,18 @@ def getConfigAndData(data):
     return configs, dataConfig
 
 
-def modelInit(configs, data):
+def modelInit(configs):
     model = Model()
     model.build_model(configs)
+    return model
+
+
+def getTrainXY(data, configs):
     x, y = data.get_train_data(
         seq_len=configs['data']['sequence_length'],
         normalise=configs['data']['normalise']
     )
-    return model, x, y
+    return x, y
 
 
 def prediction(configs, model, data, x, y):
