@@ -1,3 +1,6 @@
+from datetime import timedelta, datetime
+from dateutil.relativedelta import relativedelta
+
 import numpy as np
 import pandas as pd
 import yfinance as yf
@@ -75,9 +78,11 @@ def dataCollector(RequestObject) -> pd.DataFrame | Exception:
     interval = RequestObject.interval
     start = RequestObject.starttime
     end = RequestObject.endtime
+    trainStart = start - relativedelta(years=2)
+    trainEnd = datetime.now()
     try:
         data = yf.download(tickers=tickers, interval=interval,
-                           start=start, end=end)
+                           start=trainStart, end=trainEnd)
         dictionary = data
         return dictionary
     except Exception as e:
