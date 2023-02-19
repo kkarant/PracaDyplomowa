@@ -1,11 +1,16 @@
+import json
+import os
 from dataclasses import dataclass
 from datetime import datetime
 
 import pandas as pd
 import requests
-from pydantic import BaseModel, ValidationError, root_validator, validator
+from pandas import DataFrame
+from pydantic import BaseModel, validator
 import matplotlib.pyplot as plt
-import yfinance as yf
+
+from source.DataCollection.RequestDataCollection import dataCollector
+from source.NeuralNetwork.LSTMConfig.ModelService import getConfigAndData, modelInit, prediction
 
 key = 'JX8SQV1M7PTAB6YB'
 
@@ -13,8 +18,8 @@ key = 'JX8SQV1M7PTAB6YB'
 @dataclass
 class AnalysisResult:
     image: str
-    pred: dict
-    errors: list[str]
+    pred: DataFrame | int
+    errors: str
 
 
 class Request(BaseModel):
@@ -31,7 +36,7 @@ class Request(BaseModel):
         return value
 
     @validator("interval")
-    def checkInterval(cls, value, values):
+    def checkInterval(cls, value):
         intervalList = ['1D', '3D', '1W', '1M']
         if value not in intervalList:
             raise ValueError('Wrong interval')
@@ -44,7 +49,6 @@ class Request(BaseModel):
         data = requests.get(urlTickerCheck).json()
         for el in data['bestMatches']:
             tickers.append(el['1. symbol'])
-        print(tickers)
         if value not in tickers:
             raise ValueError('Ticker does not exist')
         else:
@@ -57,16 +61,13 @@ class Request(BaseModel):
         return analysis
 
     def analysis_process(self) -> AnalysisResult:
-        errors = []
-        pred = generate_dictionary(self)
+        pred = generate_pred(self)
 
         if isinstance(pred, pd.DataFrame):
-            image, errors_image = generate_image(self, pred)
+            image, error = generate_image(self, pred)
+            return AnalysisResult(image=image, pred=pred, errors=error)
         elif isinstance(pred, Exception):
-            errors = 'data generation error'
-            image = f'source/Classes/Images/error.jpg'
-
-        return AnalysisResult(image=image, pred=pred, errors=errors)
+            return AnalysisResult(image=f'source/Classes/Images/error.jpg', pred=0, errors='data generation error')
 
 
 def generate_image(RequestObject, pred) -> [str, str]:
@@ -88,14 +89,13 @@ def generate_image(RequestObject, pred) -> [str, str]:
     return [image, error]
 
 
-def generate_dictionary(RequestObject) -> dict[datetime, float] | Exception:
-    try:
-        data = yf.download(tickers=RequestObject.ticker, interval=RequestObject.interval,
-                           start=RequestObject.starttime, end=RequestObject.endtime)
-        dictionary = data[['Close']]
-        return dictionary
-    except Exception as e:
-        return e
+def generate_pred(RequestObject) -> dict[datetime, float] | Exception:
+    data = dataCollector(RequestObject)
+    configs, dataConfig = getConfigAndData(data)
+    model, x, y = modelInit(configs, dataConfig)
+    prediction(configs, model, dataConfig, x, y)
+
+    return data
 
 
 def check_for_image(data):
