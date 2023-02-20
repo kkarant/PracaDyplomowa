@@ -5,12 +5,12 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 import requests
+import matplotlib.pyplot as plt
 from pandas import DataFrame
 from pydantic import BaseModel, validator
-import matplotlib.pyplot as plt
 
-from source.DataCollection.RequestDataCollection import dataCollector
-from source.NeuralNetwork.LSTMConfig.ModelService import getConfigAndData, modelInit, prediction, getTrainXY
+
+from source.NeuralNetwork.LSTMConfig.ModelService import generate_pred
 
 key = 'JX8SQV1M7PTAB6YB'
 
@@ -54,17 +54,17 @@ class Request(BaseModel):
         else:
             return value
 
-    def analyze_request(self) -> dict:
-        analysisData = self.analysis_process()
+    def analyzeRequest(self) -> dict:
+        analysisData = self.analysisProcess()
         analysis = {'image': analysisData.image, 'pred': analysisData.pred,
                     'errors': analysisData.errors}
         return analysis
 
-    def analysis_process(self) -> AnalysisResult:
+    def analysisProcess(self) -> AnalysisResult:
         pred = generate_pred(self)
 
         if isinstance(pred, pd.DataFrame):
-            image, error = generate_image(self, pred)
+            image, error = self.generateImage(pred)
             return AnalysisResult(image=image, pred=pred, errors=error)
         elif isinstance(pred, Exception):
             return AnalysisResult(image=f'source/Classes/Images/error.jpg', pred=0, errors='data generation error')
@@ -95,38 +95,27 @@ class Request(BaseModel):
 
         return total_steps
 
-def generate_image(RequestObject, pred) -> [str, str]:
-    ticker = RequestObject.ticker
-    starttime = RequestObject.starttime.strftime('%Y-%m-%d')
-    endtime = RequestObject.endtime.strftime('%Y-%m-%d')
-    data = pred
-    image = f'source/Classes/Images/request_{ticker}_{starttime}_{endtime}.jpg'
-    lst = check_for_image(data)
-    isok = lst[0]
-    error = lst[1]
-    if isok:
-        plt.plot(data, label=RequestObject.ticker)
-        plt.savefig(image)
-        plt.show()
-    else:
-        image = f'source/Classes/Images/error.jpg'
+    def generateImage(self, pred) -> [str, str]:
+        ticker = self.ticker
+        starttime = self.starttime.strftime('%Y-%m-%d')
+        endtime = self.endtime.strftime('%Y-%m-%d')
+        data = pred
+        image = f'source/Classes/Images/request_{ticker}_{starttime}_{endtime}.jpg'
+        lst = checkForImage(data)
+        isok = lst[0]
+        error = lst[1]
+        if isok:
+            plt.plot(data, label=self.ticker)
+            plt.savefig(image)
+            plt.show()
+        else:
+            image = f'source/Classes/Images/error.jpg'
 
-    return [image, error]
-
-
-def generate_pred(RequestObject) -> dict[datetime, float] | Exception:
-    print(RequestObject)
-    data = dataCollector(RequestObject)
-    configs, dataConfig = getConfigAndData(data)
-    model = modelInit(configs)
-    x, y = getTrainXY(dataConfig, configs)
-    prediction(configs, model, dataConfig, x, y, RequestObject)
-
-    return data
+        return [image, error]
 
 
-def check_for_image(data):
-    if len(data) > 25:
+def checkForImage(data):
+    if len(data) > 1:
         ret = [True, 'ok']
     else:
         ret = [False, 'data error']
