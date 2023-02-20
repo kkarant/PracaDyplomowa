@@ -30,6 +30,11 @@ def dataCollector(RequestObject) -> dict[str, pd.DataFrame] | Exception:  # TODO
                            start=trainStart, end=trainEnd)
         dictionary = data
         dictionary = dataNormalization(dictionary)
+        print('=======================')
+        print(data)
+        print('=======================')
+        print(dictionary)
+        print('=======================')
         return {'source': data, 'normalized': dictionary}
     except Exception as e:
         return e

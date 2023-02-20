@@ -2,6 +2,8 @@ import json
 import math
 import os
 from datetime import datetime
+
+import pandas as pd
 from matplotlib import pyplot as plt
 from source.DataCollection.RequestDataCollection import DataObject, dataCollector
 from source.NeuralNetwork.LSTMConfig.Model import Model
@@ -11,17 +13,21 @@ def getConfig():
     return json.load(open('source/NeuralNetwork/LSTMConfig/LSTMconfig.json', 'r'))
 
 
-def generate_pred(RequestObject) -> dict[datetime, float] | Exception:
+def generate_pred(RequestObject) -> pd.DataFrame | Exception:
     config = getConfig()
-    dataObject = getDataObject(dataCollector(RequestObject)['normalized'],
-                               dataCollector(RequestObject)['source'], config)
+    dict = dataCollector(RequestObject)
+    dataObject = getDataObject(dict['normalized'],
+                               dict['source'], config)
+    print(dataObject.data_train)
+    print(f'train len: {len(dataObject.data_train)}, test len: {len(dataObject.data_test)}')
 
-    model = modelInit(config)
-    model_name = trainModel(config, model, dataObject)  # needs full remake
-    model_results = testModel(model, dataObject)  # needs to be written
-
-    predictions = predict(model_name, dataObject)
-    return predictions
+    #
+    # model = modelInit(config)
+    # model_name = trainModel(config, model, dataObject)  # needs full remake
+    # model_results = testModel(model, dataObject)  # needs to be written
+    #
+    # predictions = predict(model_name, dataObject)
+    return pd.DataFrame()
 
 
 def plot_results(predicted_data):  # , true_data
