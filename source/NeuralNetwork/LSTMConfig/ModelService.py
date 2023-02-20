@@ -21,8 +21,6 @@ def generate_pred(RequestObject) -> dict[datetime, float] | Exception:
     model_results = testModel(model, dataObject)  # needs to be written
 
     predictions = predict(model_name, dataObject)
-    # predictions = loaded_model.predict(RequestObject.getNumberOfSteps())
-
     return predictions
 
 
