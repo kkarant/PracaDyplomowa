@@ -5,7 +5,7 @@ from .schemas import Request as ProcessingRequest
 
 from source.Classes.RequestInterface import Request as RequestService
 
-router = APIRouter(prefix="/process")
+router = APIRouter(prefix="/process", tags=["processing"])
 
 
 @router.post('/')
