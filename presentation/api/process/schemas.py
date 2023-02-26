@@ -7,5 +7,5 @@ class Request(BaseModel):
     ticker: str
     starttime: datetime
     endtime: datetime
-    requesttime: datetime
+    requesttime: datetime = datetime.now()
     interval: str
