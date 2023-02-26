@@ -1,9 +1,8 @@
 import json
-import math
 import os
-from datetime import datetime
-
 import pandas as pd
+
+from datetime import datetime
 from matplotlib import pyplot as plt
 from source.DataCollection.RequestDataCollection import DataObject, dataCollector
 from source.NeuralNetwork.LSTMConfig.Model import Model
@@ -18,12 +17,10 @@ def generate_pred(RequestObject) -> pd.DataFrame | Exception:
     dict = dataCollector(RequestObject)
     dataObject = getDataObject(dict['normalized'],
                                dict['source'], config)
-    print(dataObject.data_train)
     print(f'train len: {len(dataObject.data_train)}, test len: {len(dataObject.data_test)}')
-
-    #
-    # model = modelInit(config)
-    # model_name = trainModel(config, model, dataObject)  # needs full remake
+    model = modelInit(config, RequestObject.getNumberOfSteps())
+    history, save_dir = model.train_model(config, dataObject, validation_split=0.075)  # needs full remake
+    print(history)
     # model_results = testModel(model, dataObject)  # needs to be written
     #
     # predictions = predict(model_name, dataObject)
@@ -45,34 +42,14 @@ def getDataObject(data_normalized, data_source, configs) -> DataObject:
         data_normalized,
         data_source,
         configs['data']['train_test_split'],
-        configs['data']['columns']
     )
     return dataObject
 
 
-def modelInit(configs) -> Model:
+def modelInit(configs, neurons_output) -> Model:
     model = Model()
-    model.build_model(configs)
+    model.build_model(configs, neurons_output)
     return model
-
-
-# TODO remake because train generator govno
-def trainModel(configs, model, data) -> str:
-    steps_per_epoch = math.ceil(
-        (data.len_train - configs['data']['sequence_length']) / configs['training']['batch_size'])
-    model_name = model.train_generator(
-        data_gen=data.generate_train_batch(
-            seq_len=configs['data']['sequence_length'],
-            batch_size=configs['training']['batch_size'],
-            normalise=configs['data']['normalise']
-        ),
-        epochs=configs['training']['epochs'],
-        batch_size=configs['training']['batch_size'],
-        steps_per_epoch=steps_per_epoch,
-        save_dir=configs['model']['save_dir']
-    )
-
-    return model_name
 
 
 # TODO write test to return rmse mse and pred for image generation (for dev)

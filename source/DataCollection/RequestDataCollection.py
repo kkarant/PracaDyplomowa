@@ -8,46 +8,38 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 class DataObject:
-    def __init__(self, data_normalized, data_source, split, cols):
+    def __init__(self, data_normalized, data_source, split):
         split = int(len(data_normalized) * split)
-        self.data_train = data_normalized.get(cols).values[:split]
-        self.data_test = data_normalized.get(cols).values[split:]
+        self.data_train = data_normalized[:split]
+        self.data_test = data_normalized[split:]
         self.len_train = len(self.data_train)
         self.len_test = len(self.data_test)
-        self.source_data_test = data_source.get(cols).values[split:]
+        self.source_data_train = data_source[:split]
+        self.source_data_test = data_source[split:]
         self.source_data_len_test = len(self.data_test)
 
 
-def dataCollector(RequestObject) -> dict[str, pd.DataFrame] | Exception:  # TODO return types after normalization
-    tickers = RequestObject.ticker
+def dataCollector(RequestObject) -> dict[str, np.ndarray] | Exception:
+    ticker = RequestObject.ticker
     interval = RequestObject.interval
     start = RequestObject.starttime
     end = RequestObject.endtime
     trainStart = start - relativedelta(years=3)
     trainEnd = datetime.now()
     try:
-        data = yf.download(tickers=tickers, interval=interval,
+        data = yf.download(tickers=ticker, interval=interval,
                            start=trainStart, end=trainEnd)
-        dictionary = data
-        dictionary = dataNormalization(dictionary)
-        print('=======================')
-        print(data)
-        print('=======================')
-        print(dictionary)
-        print('=======================')
-        return {'source': data, 'normalized': dictionary}
+        index_list, normalized, data = dataNormalization(data)
+        return {'source': data, 'normalized': normalized}
     except Exception as e:
         return e
 
 
 def dataNormalization(data: pd.DataFrame):
-    ser = pd.Series(data.reset_index(), copy=False)
-    values = ser.values.reshape(-1, 1)
-    print(type(ser))
     scaler = MinMaxScaler(feature_range=(0, 1))
-    scaler = scaler.fit(values)
-    # print('Min: %f, Max: %f' % (scaler.data_min_, scaler.data_max_))
-
-    normalized = scaler.transform(values)
+    index_list = list(data.index.values)
+    data = data.reset_index(drop=True)
+    data = data['Close']
+    normalized = scaler.fit_transform(data.values.reshape(-1,1))
     # print(scaler.inverse_transform(normalized))
-    return normalized
+    return index_list, normalized, data.to_numpy()
